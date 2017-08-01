@@ -10,4 +10,13 @@ $client = new Client('http://localhost:8000', array(
         'exceptions' => false,
     )
 ));
+$name = 'Viktor'. rand(1,100);
+$data = [
+    'name' => $name,
+    'age' => 23
+];
+$request = $client->post('api/programmers', null, json_encode($data));
+$response = $request->send();
+echo $response;
+echo "\n\n";
 
