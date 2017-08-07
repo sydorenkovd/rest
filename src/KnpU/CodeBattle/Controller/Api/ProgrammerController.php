@@ -40,6 +40,7 @@ class ProgrammerController extends BaseController
     }
     public function showAction($nickname)
     {
+        // test case
         $programmer = $this->getProgrammerRepository()->findOneByNickname($nickname);
         if (!$programmer) {
             $this->throw404('Crap! This programmer has deserted! We\'ll send a search party');
