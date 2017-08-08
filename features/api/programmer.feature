@@ -6,4 +6,9 @@ Feature: Programmer
   Background:
     # Given the user "weaverryan" exists
 
-  Scenario: Create a programmer
+
+  Scenario: GET a collection of programmers
+    When I request "GET /api/programmers"
+    Then the response status code should be 200
+    And the "programmers" property should be an array
+    And the "programmers" property should contain 30 items
