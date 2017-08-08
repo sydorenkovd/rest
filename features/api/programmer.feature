@@ -4,11 +4,22 @@ Feature: Programmer
   I need to be able to create programmers and power them up
 
   Background:
-    # Given the user "weaverryan" exists
+    # Given the user "CowboyCfoder" exists
 
 
-  Scenario: GET a collection of programmers
-    When I request "GET /api/programmers"
+  Scenario: PUT to update a programmer
+    Given the following programmers exist:
+      | nickname    | avatarNumber | tagLine |
+      | CowboyCoder | 5            | foo     |
+    And I have the payload:
+    """
+    {
+      "nickname": "CowboyCoder",
+      "avatarNumber" : 2,
+      "tagLine": "foo"
+    }
+    """
+    When I request "PUT /api/programmers/CowboyCoder"
+    And print last response
     Then the response status code should be 200
-    And the "programmers" property should be an array
-    And the "programmers" property should contain 30 items
+    And the "avatarNumber" property should equal "2"

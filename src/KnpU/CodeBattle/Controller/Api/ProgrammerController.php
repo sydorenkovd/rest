@@ -17,16 +17,16 @@ class ProgrammerController extends BaseController
         $controllers->post('/api/programmers', array($this, 'newAction'));
         $controllers->get('/api/programmers/{nickname}', array($this, 'showAction'))
             ->bind('api_programmers_show');
-        $controllers->get('/api/programmers', array($this, 'listAction'));}
+        $controllers->get('/api/programmers', array($this, 'listAction'));
+        $controllers->put('/api/programmers/{nickname}', array($this, 'updateAction'));
+    }
+
 
     public function newAction(Request $request) {
         $data = json_decode($request->getContent(), true);
 
         $model = new Programmer();
-        $model->nickname = $data['name'];
-        $model->avatarNumber = $data['age'];
-        $model->powerLevel = $data['age'];
-        $model->userId = $this->findUserByUsername('sydorenkovd')->id;
+     $this->handleRequest($request, $model);
 
         $this->save($model);
         $programmerUrl = $this->generateUrl(
@@ -35,6 +35,19 @@ class ProgrammerController extends BaseController
         );
         $response = new Response(json_encode($model), 201);
         $response->headers->set('Location', $programmerUrl);
+
+        return $response;
+    }
+    public function updateAction($nickname, Request $request) {
+        $data = json_decode($request->getContent(), true);
+        $model = $this->getProgrammerRepository()->findOneByNickname($nickname);;
+        $model->nickname = $data['name'];
+        $model->avatarNumber = $data['age'];
+        $model->powerLevel = $data['age'];
+        $model->userId = $this->findUserByUsername('sydorenkovd')->id;
+
+        $this->save($model);
+        $response = new Response(json_encode($model), 200);
 
         return $response;
     }
@@ -72,5 +85,25 @@ class ProgrammerController extends BaseController
             'powerLevel' => $programmer->powerLevel,
             'tagLine' => $programmer->tagLine,
         );
+    }
+
+    private function handleRequest(Request $request, Programmer $programmer)
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if ($data === null) {
+            throw new \Exception(sprintf('Invalid JSON: '.$request->getContent()));
+        }
+
+        // determine which properties should be changeable on this request
+        $apiProperties = array('nickname', 'avatarNumber', 'tagLine');
+
+        // update the properties
+        foreach ($apiProperties as $property) {
+            $val = isset($data[$property]) ? $data[$property] : null;
+            $programmer->$property = $val;
+        }
+
+        $programmer->userId = $this->findUserByUsername('sydorenkovd')->id;
     }
 }
