@@ -7,19 +7,6 @@ Feature: Programmer
     # Given the user "CowboyCfoder" exists
 
 
-  Scenario: PUT to update a programmer
-    Given the following programmers exist:
-      | nickname    | avatarNumber | tagLine |
-      | CowboyCoder | 5            | foo     |
-    And I have the payload:
-    """
-    {
-      "nickname": "CowboyCoder",
-      "avatarNumber" : 2,
-      "tagLine": "foo"
-    }
-    """
-    When I request "PUT /api/programmers/CowboyCoder"
-    And print last response
-    Then the response status code should be 200
-    And the "avatarNumber" property should equal "2"
+  Scenario: DELETE a programmer
+    When I request "DELETE /api/programmers/ObjectOrienter112"
+    Then the response status code should be 204

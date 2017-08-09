@@ -19,8 +19,19 @@ class ProgrammerController extends BaseController
             ->bind('api_programmers_show');
         $controllers->get('/api/programmers', array($this, 'listAction'));
         $controllers->put('/api/programmers/{nickname}', array($this, 'updateAction'));
+        $controllers->delete('/api/programmers/{nickname}', array($this, 'deleteAction'));
     }
 
+    public function deleteAction($nickname)
+    {
+        // ...
+        $programmer = $this->getProgrammerRepository()->findOneByNickname($nickname);
+        if ($programmer) {
+            $this->delete($programmer);
+        }
+
+        return new Response(null, 204);
+    }
 
     public function newAction(Request $request) {
         $data = json_decode($request->getContent(), true);
@@ -41,10 +52,7 @@ class ProgrammerController extends BaseController
     public function updateAction($nickname, Request $request) {
         $data = json_decode($request->getContent(), true);
         $model = $this->getProgrammerRepository()->findOneByNickname($nickname);;
-        $model->nickname = $data['name'];
-        $model->avatarNumber = $data['age'];
-        $model->powerLevel = $data['age'];
-        $model->userId = $this->findUserByUsername('sydorenkovd')->id;
+        $this->handleRequest($request, $model);
 
         $this->save($model);
         $response = new Response(json_encode($model), 200);
@@ -90,13 +98,17 @@ class ProgrammerController extends BaseController
     private function handleRequest(Request $request, Programmer $programmer)
     {
         $data = json_decode($request->getContent(), true);
+        $isNew = !$programmer->id;
 
         if ($data === null) {
             throw new \Exception(sprintf('Invalid JSON: '.$request->getContent()));
         }
 
         // determine which properties should be changeable on this request
-        $apiProperties = array('nickname', 'avatarNumber', 'tagLine');
+        $apiProperties = array('avatarNumber', 'tagLine');
+        if ($isNew) {
+            $apiProperties[] = 'nickname';
+        }
 
         // update the properties
         foreach ($apiProperties as $property) {
