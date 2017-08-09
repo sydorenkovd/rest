@@ -7,14 +7,21 @@ Feature: Programmer
     # Given the user "CowboyCfoder" exists
 
 
-  Scenario: PATCH to update a programmer
-    And I have the payload:
+  Scenario: Validation errors
+    Given I have the payload:
     """
     {
-      "tagLine": "giddyup"
+      "avatarNumber" : "2",
+      "tagLine": "I'm from a test!"
     }
     """
-    When I request "PATCH /api/programmers/ObjectOrienter"
-    Then the response status code should be 200
-    And the "avatarNumber" property should equal "2"
-    And the "tagLine" property should equal "giddyup"
+    When I request "POST /api/programmers"
+    Then the response status code should be 400
+    And the following properties should exist:
+    """
+    type
+    title
+    errors
+    """
+    And the "errors.nickname" property should exist
+    But the "errors.avatarNumber" property should not exist

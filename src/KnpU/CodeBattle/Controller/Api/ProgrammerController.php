@@ -41,6 +41,9 @@ class ProgrammerController extends BaseController
         $model = new Programmer();
      $this->handleRequest($request, $model);
 
+        if ($errors = $this->validate($model)) {
+            return $this->handleValidationResponse($errors);
+        }
         $this->save($model);
         $programmerUrl = $this->generateUrl(
             'api_programmers_show',
@@ -51,6 +54,18 @@ class ProgrammerController extends BaseController
 
         return $response;
     }
+
+    private function handleValidationResponse(array $errors)
+    {
+        $data = array(
+            'type' => 'validation_error',
+            'title' => 'There was a validation error',
+            'errors' => $errors
+        );
+
+        return new JsonResponse($data, 400);
+    }
+
     public function updateAction($nickname, Request $request) {
         $data = json_decode($request->getContent(), true);
         $model = $this->getProgrammerRepository()->findOneByNickname($nickname);;
