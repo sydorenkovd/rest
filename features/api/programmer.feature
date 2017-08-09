@@ -7,6 +7,14 @@ Feature: Programmer
     # Given the user "CowboyCfoder" exists
 
 
-  Scenario: DELETE a programmer
-    When I request "DELETE /api/programmers/ObjectOrienter112"
-    Then the response status code should be 204
+  Scenario: PATCH to update a programmer
+    And I have the payload:
+    """
+    {
+      "tagLine": "giddyup"
+    }
+    """
+    When I request "PATCH /api/programmers/ObjectOrienter"
+    Then the response status code should be 200
+    And the "avatarNumber" property should equal "2"
+    And the "tagLine" property should equal "giddyup"

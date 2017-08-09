@@ -20,6 +20,8 @@ class ProgrammerController extends BaseController
         $controllers->get('/api/programmers', array($this, 'listAction'));
         $controllers->put('/api/programmers/{nickname}', array($this, 'updateAction'));
         $controllers->delete('/api/programmers/{nickname}', array($this, 'deleteAction'));
+        $controllers->match('/api/programmers/{nickname}', array($this, 'updateAction'))
+            ->method('PATCH');
     }
 
     public function deleteAction($nickname)
@@ -112,6 +114,9 @@ class ProgrammerController extends BaseController
 
         // update the properties
         foreach ($apiProperties as $property) {
+            if (!isset($data[$property]) && $request->isMethod('PATCH')) {
+                continue;
+            }
             $val = isset($data[$property]) ? $data[$property] : null;
             $programmer->$property = $val;
         }
