@@ -60,17 +60,11 @@ class ProgrammerController extends BaseController
     {
         $apiProblem = new ApiProblem(
             400,
-            'validation_error',
-            'There was a validation error'
+            ApiProblem::TYPE_VALIDATION_ERROR
         );
         $apiProblem->set('errors', $errors);
-        $data = array(
-            'type' => 'validation_error',
-            'title' => 'There was a validation error',
-            'errors' => $errors
-        );
 
-        $response =  new JsonResponse($data, 400);
+        $response =  new JsonResponse($apiProblem->toArray(), $apiProblem->getStatusCode());
         $response->headers->set('Content-Type', 'application/problem+json');
         return $response;
     }
