@@ -3,6 +3,7 @@
 namespace KnpU\CodeBattle\Controller\Api;
 
 use KnpU\CodeBattle\Api\ApiProblem;
+use KnpU\CodeBattle\Api\ApiProblemException;
 use KnpU\CodeBattle\Controller\BaseController;
 use KnpU\CodeBattle\Model\Programmer;
 use Silex\Application;
@@ -44,7 +45,7 @@ class ProgrammerController extends BaseController
      $this->handleRequest($request, $model);
 
         if ($errors = $this->validate($model)) {
-            return $this->handleValidationResponse($errors);
+            $this->throwApiProblemValidationException($errors);
         }
         $this->save($model);
         $programmerUrl = $this->generateUrl(
@@ -57,7 +58,7 @@ class ProgrammerController extends BaseController
         return $response;
     }
 
-    private function handleValidationResponse(array $errors)
+    private function throwApiProblemValidationException(array $errors)
     {
         $apiProblem = new ApiProblem(
             400,
@@ -65,16 +66,16 @@ class ProgrammerController extends BaseController
         );
         $apiProblem->set('errors', $errors);
 
-        $response =  new JsonResponse($apiProblem->toArray(), $apiProblem->getStatusCode());
-        $response->headers->set('Content-Type', 'application/problem+json');
-        return $response;
+        throw new ApiProblemException($apiProblem);
     }
 
     public function updateAction($nickname, Request $request) {
         $data = json_decode($request->getContent(), true);
         $model = $this->getProgrammerRepository()->findOneByNickname($nickname);;
         $this->handleRequest($request, $model);
-
+        if ($errors = $this->validate($model)) {
+            $this->throwApiProblemValidationException($errors);
+        }
         $this->save($model);
         $response = new Response(json_encode($model), 200);
 
@@ -122,10 +123,11 @@ class ProgrammerController extends BaseController
         $isNew = !$programmer->id;
 
         if ($data === null) {
-            throw new HttpException(
+            $problem = new ApiProblem(
                 400,
                 ApiProblem::TYPE_INVALID_REQUEST_BODY_FORMAT
             );
+            throw new ApiProblemException($problem);
         }
 
         // determine which properties should be changeable on this request

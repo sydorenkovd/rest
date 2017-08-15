@@ -28,7 +28,7 @@ class ApiProblem
     {
         $this->extraData[$name] = $value;
     }
-    public function __construct($statusCode, $type, $title)
+    public function __construct($statusCode, $type)
     {
         $this->statusCode = $statusCode;
         $this->type = $type;
@@ -42,6 +42,9 @@ class ApiProblem
     public function getStatusCode()
     {
         return $this->statusCode;
+    }
+    public function getTitle() {
+        return $this->title;
     }
     public function toArray()
     {
