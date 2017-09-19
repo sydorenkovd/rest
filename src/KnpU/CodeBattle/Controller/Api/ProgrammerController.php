@@ -38,6 +38,11 @@ class ProgrammerController extends BaseController
         return new Response(null, 204);
     }
 
+//    public function showAction($nickname)
+//    {
+//        throw new \Exception('I made a mistake!');
+//    }
+
     public function newAction(Request $request) {
         $data = json_decode($request->getContent(), true);
 
@@ -52,7 +57,7 @@ class ProgrammerController extends BaseController
             'api_programmers_show',
             ['nickname' => $model->nickname]
         );
-        $response = new Response(json_encode($model), 201);
+        $response = $this->createApiResponse($model, 201);
         $response->headers->set('Location', $programmerUrl);
 
         return $response;
@@ -77,7 +82,7 @@ class ProgrammerController extends BaseController
             $this->throwApiProblemValidationException($errors);
         }
         $this->save($model);
-        $response = new Response(json_encode($model), 200);
+        $response = $this->createApiResponse($model, 200);
 
         return $response;
     }
@@ -88,8 +93,7 @@ class ProgrammerController extends BaseController
         if (!$programmer) {
             $this->throw404('Crap! This programmer has deserted! We\'ll send a search party');
         }
-        $data = $this->serializeProgrammer($programmer);
-        $response = new Response(json_encode($data), 200);
+        $response = $this->createApiResponse($programmer, 200);
         $response->headers->set('Content-Type', 'application/json');
 
         return $response;
@@ -97,24 +101,11 @@ class ProgrammerController extends BaseController
 
     public function listAction() {
         $programmers = $this->getProgrammerRepository()->findAll();
-        $data = array('programmers' => array());
-        foreach ($programmers as $programmer) {
-            $data['programmers'][] = $this->serializeProgrammer($programmer);
-        }
-
-        $response = new Response(json_encode($data), 200);
+        $data = array('programmers' => $programmers);
+        $response = $this->createApiResponse($programmers, 201);
         $response->headers->set('Content-Type', 'application/json');
 
         return $response;
-    }
-    private function serializeProgrammer(Programmer $programmer)
-    {
-        return array(
-            'nickname' => $programmer->nickname,
-            'avatarNumber' => $programmer->avatarNumber,
-            'powerLevel' => $programmer->powerLevel,
-            'tagLine' => $programmer->tagLine,
-        );
     }
 
     private function handleRequest(Request $request, Programmer $programmer)

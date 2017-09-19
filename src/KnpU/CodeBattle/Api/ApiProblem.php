@@ -7,6 +7,8 @@
  * Time: 21:49
  */
 namespace KnpU\CodeBattle\Api;
+use Symfony\Component\HttpFoundation\Response;
+
 class ApiProblem
 {
     const TYPE_VALIDATION_ERROR = 'validation_error';
@@ -28,15 +30,25 @@ class ApiProblem
     {
         $this->extraData[$name] = $value;
     }
-    public function __construct($statusCode, $type)
+    public function __construct($statusCode, $type = null)
     {
         $this->statusCode = $statusCode;
         $this->type = $type;
-        if (!isset(self::$titles[$type])) {
-            throw new \InvalidArgumentException('No title for type '.$type);
-        }
 
-        $this->title = self::$titles[$type];
+        if (!$type) {
+            // no type? The default is about:blank and the title should
+            // be the standard status code message
+            $this->type = 'about:blank';
+            $this->title = isset(Response::$statusTexts[$statusCode])
+                ? Response::$statusTexts[$statusCode]
+                : 'Unknown HTTP status code :(';
+        } else {
+            if (!isset(self::$titles[$type])) {
+                throw new \InvalidArgumentException('No title for type '.$type);
+            }
+
+            $this->title = self::$titles[$type];
+        }
     }
 
     public function getStatusCode()

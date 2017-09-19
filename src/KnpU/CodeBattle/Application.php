@@ -3,6 +3,10 @@
 namespace KnpU\CodeBattle;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Guzzle\Http\Exception\HttpException;
+use JMS\Serializer\Naming\IdenticalPropertyNamingStrategy;
+use JMS\Serializer\SerializerBuilder;
+use KnpU\CodeBattle\Api\ApiProblem;
 use KnpU\CodeBattle\Api\ApiProblemException;
 use KnpU\CodeBattle\Battle\PowerManager;
 use KnpU\CodeBattle\Repository\BattleRepository;
@@ -81,7 +85,6 @@ class Application extends SilexApplication
             $this->mount('/', new $class($this));
         }
     }
-
     private function configureProviders()
     {
         // URL generation
@@ -208,6 +211,12 @@ class Application extends SilexApplication
         $this['api.validator'] = $this->share(function() use ($app) {
             return new ApiValidator($app['validator']);
         });
+
+        $this['serializer'] = $this->share(function () use ($app){
+           return SerializerBuilder::create()->setCacheDir($app['root_dir'] . '/cache/serializer')
+               ->setDebug($app['debug'])->setPropertyNamingStrategy(new IdenticalPropertyNamingStrategy())
+               ->build();
+        });
     }
 
     private function configureSecurity()
@@ -287,20 +296,34 @@ class Application extends SilexApplication
     }
 
     private function configureListeners()
-    {
-        $this->error(function(\Exception $e, $statusCode) {
+    { $app = $this;
+
+        $this->error(function(\Exception $e, $statusCode) use ($app) {
         // only do something special if we have an ApiProblemException!
-        if (!$e instanceof ApiProblemException) {
+        if (strpos($app['request']->getPathInfo(), '/api') !== 0) {
             return;
         }
+            if ($e instanceof ApiProblemException) {
+                $apiProblem = $e->getApiProblem();
+            } else {
+                $apiProblem = new ApiProblem($statusCode);
+            }
 
-        $response = new JsonResponse(
-            $e->getApiProblem()->toArray(),
-            $e->getApiProblem()->getStatusCode()
-        );
-        $response->headers->set('Content-Type', 'application/problem+json');
+            if ($e instanceof HttpException) {
+                $apiProblem->set('detail', $e->getMessage());
+            }
 
+            $data = $apiProblem->toArray();
+            if ($data['type'] != 'about:blank') {
+                $data['type'] = 'http://localhost:8000/api/docs/errors#'.$data['type'];
+            }
+            $response = new JsonResponse(
+                $data,
+                $statusCode
+            );
+            $response->headers->set('Content-Type', 'application/problem+json');
         return $response;
     });
     }
+
 } 
